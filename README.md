@@ -28,7 +28,7 @@ translation_unit = show [c|
 int main(int argc, char **argv)
 {
     printf("hello world!\n");
-    
+
     return 0;
 }
 |]
@@ -54,17 +54,17 @@ expression = show [ce| x * y * z |]
 
  * `${<exp>}` executes arbitrary haskell expression of type `String`
 
-Replacement targets are statements, expressions, external declarations, and string inside identifiers.
+Replacement targets are statements, expressions, external declarations, part of identifiers, and inside of string literals.
 
 ### Example
 
 ```ghci
-> :t [ce| x + ${} |] 
+> :t [ce| x + ${} |]
 [ce| x + ${} |] :: [Char] -> Language.Meta.C99.AST.Exp
 > [ce| x + ${} |] "y"
 x + y
-> :t  [ce| ${} + (${}) |]
-[ce| ${} + (${}) |]
+> :t  [ce| ${} + ${} |]
+[ce| ${} + ${} |]
   :: String -> String -> Language.Meta.C99.AST.Exp
 > [ce| ${} + ${} |] "x" "y"
 x + y
@@ -72,6 +72,8 @@ x + y
 x + y
 > [cs| foo_${}(); |] "bar"
 foo_bar();
+> [ce| printf("${show [1,2,3,4]}\n") |]
+printf("[1,2,3,4]\n")
 ```
 
 ## Limitation
@@ -96,7 +98,7 @@ struct x {
 };
 ```
 
- * Context-sensitive portion of grammers will not be parsed appropriately. 
+ * Context-sensitive portion of grammers will not be parsed appropriately.
 
 ```c
 typedef int x;
@@ -108,12 +110,18 @@ x(y); // either function call (x(y)) or declaration (int (y))
 
   However, those kind of misinterpretations do not really matter when you only concern about their literal representations.
 
+ * Quasi-quotations could not be nested inside an anti-quotation.
+
+```hs
+code = [c| int x = ${ show [ce| x * x |] }; |] -- quotes can not be nested here
+```
+
  * Trigraph/Digraph is not supported (who knows).
 
 ## Standard
 
- * C99 (ISO/IEC 9899:TC3)
+C99 (ISO/IEC 9899:TC3)
 
-## LICENSE 
+## License
 
   MIT
